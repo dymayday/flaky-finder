@@ -29,6 +29,7 @@ impl std::default::Default for FlakyFinderBuilder {
 }
 
 impl FlakyFinderBuilder {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }
@@ -44,12 +45,14 @@ impl FlakyFinderBuilder {
     }
 
     /// The actual command of the process we are evaluating.
+    #[allow(dead_code)]
     pub(crate) fn cmd(&mut self, cmd: &str) -> &mut Self {
         self.cmd = cmd.to_string();
         self
     }
 
     /// The number of concurrent process used to evaluate the test harness.
+    #[allow(dead_code)]
     pub(crate) fn nb_threads(&mut self, nb_cpu: u32) -> &mut Self {
         self.nb_threads = nb_cpu;
         self
