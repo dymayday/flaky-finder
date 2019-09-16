@@ -1,6 +1,6 @@
 use builder::FlakyFinderBuilder;
-use std::process::{Command, ExitStatus};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+use std::process::{Command, ExitStatus};
 
 mod builder;
 mod cli;
@@ -27,14 +27,13 @@ impl FlakyFinder {
         // Provide a custom bar style
         let pb = ProgressBar::new(self.runs);
         pb.set_style(ProgressStyle::default_bar().template(
-                "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
-                // "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] ({pos}/{len}, ETA {eta})",
+            "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
+            // "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] ({pos}/{len}, ETA {eta})",
         ));
 
         // TODO: Run the tests in parallel
         for _ in (0..self.runs).progress_with(pb) {
             // std::thread::sleep(std::time::Duration::from_millis(100));
-
 
             let output = Command::new("sh")
                 .arg("-c")

@@ -15,9 +15,11 @@ impl Cli {
             .version("0.1")
             .author("dymayday <dymayday@gmail.com>")
             .about("The app is looking for bug in the matrix.")
-            .arg(Arg::with_name("cmd")
-                .required(true)
-                .help("The command of the process we want to evaluate."))
+            .arg(
+                Arg::with_name("cmd")
+                    .required(true)
+                    .help("The command of the process we want to evaluate."),
+            )
             .arg(
                 Arg::with_name("runs")
                     .short("r")

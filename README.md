@@ -1,3 +1,5 @@
+[![Build status](https://travis-ci.com/dymayday/flaky-finder.svg?branch=master)](https://travis-ci.com/dymayday/flaky-finder)
+
 # flaky-finder
 CLI tool met to find flaky test by running multiple times a test harness until it fails
 
