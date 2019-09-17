@@ -71,7 +71,7 @@ impl FlakyFinder {
 
 	// Execute the process at least one time in order to single process the compilation
 	print!(">> Compiling...");
-	::std::io::stdout().flush();
+	::std::io::stdout().flush()?;
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd.to_string())
