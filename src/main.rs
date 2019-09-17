@@ -4,9 +4,9 @@ use builder::FlakyFinderBuilder;
 use std::{
     io::Write,
     process::{Command, ExitStatus},
-    thread,
 };
-use crossbeam_channel::bounded;
+use crossbeam_channel;
+use threadpool;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
 mod error;
@@ -56,7 +56,7 @@ impl FlakyFinder {
     }
 
     /// Runs a command multiple time trying to find if it can fail at some point.
-    pub(crate) fn par_run(cmd: &str, runs: u64) -> FlakyFinderResult<()> {
+    pub(crate) fn par_run(cmd: &str, nb_threads: u32, runs: u64) -> FlakyFinderResult<()> {
 
         // Provide a custom bar style
         let pb = ProgressBar::new(runs);
@@ -65,24 +65,25 @@ impl FlakyFinder {
         ));
 
 
-        let (sx, rx) = bounded(runs as usize);
+        let (sx, rx) = crossbeam_channel::bounded(runs as usize);
 
         let cmd = std::sync::Arc::new(cmd.to_string());
 
+	// Execute the process at least one time in order to single process the compilation
         let output = Command::new("sh")
             .arg("-c")
-            // .arg(cmd.clone().to_string())
             .arg(cmd.to_string())
             .output()
             .expect("Fail to run command process.");
-
         sx.send(output).expect("Fail to send Command's output to channel.");
+
+        let pool = threadpool::ThreadPool::new(nb_threads as usize);
 
         for _ in 0..runs-1 {
             let cmd = cmd.clone();
             let sx = sx.clone();
 
-            thread::spawn(move || {
+            pool.execute(move|| {
                 let output = Command::new("sh")
                     .arg("-c")
                     .arg(cmd.to_string())
@@ -117,7 +118,7 @@ fn main() {
     }
 
     if ff.nb_threads > 1 {
-        FlakyFinder::par_run(&ff.cmd, ff.runs).expect("Fail to run processes in parallel.");
+        FlakyFinder::par_run(&ff.cmd, ff.nb_threads, ff.runs).expect("Fail to run processes in parallel.");
     } else {
         ff.run().expect("Fail to processes.");
     }
