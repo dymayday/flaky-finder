@@ -38,17 +38,13 @@ impl FlakyFinder {
             "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
         ));
 
-        // TODO: Run the tests in parallel
         for _ in (0..self.runs).progress_with(pb) {
-            // std::thread::sleep(std::time::Duration::from_millis(100));
-
             let output = Command::new("sh")
                 .arg("-c")
                 .arg(self.cmd.clone())
                 .output()
                 .expect("Fail to run command process.");
 
-            // let status = output.status().expect("Falt to get process status.");
             let status = output.status;
             if !status.success() {
                 std::io::stdout().write_all(&output.stdout)?;
@@ -82,19 +78,13 @@ impl FlakyFinder {
 
         sx.send(output).expect("Fail to send Command's output to channel.");
 
-
-        // TODO: Run the tests in parallel
-        // for _ in (0..self.runs).progress_with(pb) {
-        for _ in (0..runs-1) {
-            // std::thread::sleep(std::time::Duration::from_millis(100));
-
+        for _ in 0..runs-1 {
             let cmd = cmd.clone();
             let sx = sx.clone();
 
             thread::spawn(move || {
                 let output = Command::new("sh")
                     .arg("-c")
-                    // .arg(cmd.clone().to_string())
                     .arg(cmd.to_string())
                     .output()
                     .expect("Fail to run command process.");
@@ -121,6 +111,10 @@ impl FlakyFinder {
 
 fn main() {
     let ff = FlakyFinderBuilder::from_cli().build();
+
+    if ff.runs < 1 {
+        panic!("Number of 'runs' has to be > 0.")
+    }
 
     if ff.nb_threads > 1 {
         FlakyFinder::par_run(&ff.cmd, ff.runs).expect("Fail to run processes in parallel.");
