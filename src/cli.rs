@@ -1,5 +1,6 @@
 //! CLI handler definition.
 
+use std::env;
 use clap::{App, Arg};
 
 pub(crate) struct Cli {
@@ -11,8 +12,9 @@ pub(crate) struct Cli {
 impl Cli {
     pub fn new() -> Self {
         // TODO: Use env instead here
-        let matches = App::new("Flaky-Finder")
-            .version("0.1")
+        // let env_vars = env::vars();
+        let matches = App::new(env::var("CARGO_PKG_NAME").unwrap())
+            .version(&*format!("{}", env::var("CARGO_PKG_VERSION").unwrap()))
             .author("dymayday <dymayday@gmail.com>")
             .about("The app is looking for bug in the matrix.")
             .arg(
