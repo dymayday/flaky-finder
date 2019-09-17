@@ -32,5 +32,5 @@ flaky-finder -j2 -r100 "cargo test -- --nocapture release_test"
 
 ## ToDo
 
-- Add ability to run process in multiple threads.
-- Add better documentation.
+- [X] Add ability to run process in multiple threads.
+- [ ] Add better documentation.
