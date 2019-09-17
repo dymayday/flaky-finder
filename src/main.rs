@@ -58,7 +58,6 @@ impl FlakyFinder {
 
 fn main() {
     let mut ff = FlakyFinderBuilder::from_cli().build();
-
     ff.spawn().expect("Fail to spawn.");
 }
 
