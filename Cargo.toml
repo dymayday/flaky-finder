@@ -6,7 +6,7 @@ description = "CLI tool meant to find flaky test by running multiple times a tes
 documentation = "https://github.com/dymayday/flaky-finder"
 homepage = "https://github.com/dymayday/flaky-finder"
 repository = "https://github.com/dymayday/flaky-finder"
-keywords = ["flaky", "test", "command-line-utilities", "cli"]
+keywords = ["flaky", "test", "cli"]
 license = "AGPLv3"
 edition = "2018"
 
