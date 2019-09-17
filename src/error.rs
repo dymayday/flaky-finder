@@ -95,4 +95,3 @@ impl From<std::str::Utf8Error> for FlakyFinderError {
         FlakyFinderError::new(ErrorKind::Utf8Error(err))
     }
 }
-

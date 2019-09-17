@@ -1,17 +1,17 @@
 #![feature(try_trait)]
-use error::{FlakyFinderResult};
 use builder::FlakyFinderBuilder;
+use crossbeam_channel;
+use error::FlakyFinderResult;
+use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use std::{
     io::Write,
     process::{Command, ExitStatus},
 };
-use crossbeam_channel;
 use threadpool;
-use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 
-mod error;
 mod builder;
 mod cli;
+mod error;
 
 #[derive(Debug)]
 pub(crate) struct FlakyFinder {
@@ -57,43 +57,43 @@ impl FlakyFinder {
 
     /// Runs a command multiple time trying to find if it can fail at some point.
     pub(crate) fn par_run(cmd: &str, nb_threads: u32, runs: u64) -> FlakyFinderResult<()> {
-
         // Provide a custom bar style
         let pb = ProgressBar::new(runs);
         pb.set_style(ProgressStyle::default_bar().template(
             "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
         ));
 
-
         let (sx, rx) = crossbeam_channel::bounded(runs as usize);
 
         let cmd = std::sync::Arc::new(cmd.to_string());
 
-	// Execute the process at least one time in order to single process the compilation
-	print!(">> Compiling...");
-	::std::io::stdout().flush()?;
+        // Execute the process at least one time in order to single process the compilation
+        print!(">> Compiling...");
+        ::std::io::stdout().flush()?;
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd.to_string())
             .output()
             .expect("Fail to run command process.");
-        sx.send(output).expect("Fail to send Command's output to channel.");
-	println!("done.");
+        sx.send(output)
+            .expect("Fail to send Command's output to channel.");
+        println!("done.");
 
         let pool = threadpool::ThreadPool::new(nb_threads as usize);
 
-        for _ in 0..runs-1 {
+        for _ in 0..runs - 1 {
             let cmd = cmd.clone();
             let sx = sx.clone();
 
-            pool.execute(move|| {
+            pool.execute(move || {
                 let output = Command::new("sh")
                     .arg("-c")
                     .arg(cmd.to_string())
                     .output()
                     .expect("Fail to run command process.");
 
-                sx.send(output).expect("Fail to send Command's output to channel.");
+                sx.send(output)
+                    .expect("Fail to send Command's output to channel.");
             });
         }
 
@@ -121,7 +121,8 @@ fn main() {
     }
 
     if ff.nb_threads > 1 {
-        FlakyFinder::par_run(&ff.cmd, ff.nb_threads, ff.runs).expect("Fail to run processes in parallel.");
+        FlakyFinder::par_run(&ff.cmd, ff.nb_threads, ff.runs)
+            .expect("Fail to run processes in parallel.");
     } else {
         ff.run().expect("Fail to processes.");
     }
