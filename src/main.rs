@@ -70,12 +70,14 @@ impl FlakyFinder {
         let cmd = std::sync::Arc::new(cmd.to_string());
 
 	// Execute the process at least one time in order to single process the compilation
+	print!(">> Compiling...");
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd.to_string())
             .output()
             .expect("Fail to run command process.");
         sx.send(output).expect("Fail to send Command's output to channel.");
+	println!("done.");
 
         let pool = threadpool::ThreadPool::new(nb_threads as usize);
 
