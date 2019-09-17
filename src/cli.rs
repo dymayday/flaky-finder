@@ -48,7 +48,7 @@ impl Cli {
                 .value_of("runs")
                 .unwrap_or("1")
                 .parse::<u64>()
-                .expect("Fail to cast number of threads argument."),
+                .expect("Fail to cast number of runs argument."),
         }
     }
 }

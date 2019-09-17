@@ -1,3 +1,5 @@
+#![feature(try_trait)]
+use error::{FlakyFinderResult};
 use builder::FlakyFinderBuilder;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use std::{
@@ -5,6 +7,7 @@ use std::{
     process::{Command, ExitStatus},
 };
 
+mod error;
 mod builder;
 mod cli;
 
@@ -24,14 +27,13 @@ pub(crate) struct FlakyFinder {
 
 impl FlakyFinder {
     /// Runs a command multiple time trying to find if it can fail at some point.
-    pub(crate) fn spawn(&mut self) -> Result<(), std::io::Error> {
+    pub(crate) fn run(&mut self) -> FlakyFinderResult<()> {
         // println!("param = {:#?}", self);
 
         // Provide a custom bar style
         let pb = ProgressBar::new(self.runs);
         pb.set_style(ProgressStyle::default_bar().template(
             "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
-            // "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] ({pos}/{len}, ETA {eta})",
         ));
 
         // TODO: Run the tests in parallel
@@ -47,8 +49,8 @@ impl FlakyFinder {
             // let status = output.status().expect("Falt to get process status.");
             let status = output.status;
             if !status.success() {
-                // std::io::stdout().write_all(&output.stdout).unwrap();
-                std::io::stderr().write_all(&output.stderr).unwrap();
+                std::io::stdout().write_all(&output.stdout)?;
+                std::io::stderr().write_all(&output.stderr)?;
                 break;
             }
         }
@@ -58,7 +60,7 @@ impl FlakyFinder {
 
 fn main() {
     let mut ff = FlakyFinderBuilder::from_cli().build();
-    ff.spawn().expect("Fail to spawn.");
+    ff.run().expect("Fail to spawn.");
 }
 
 #[cfg(test)]
