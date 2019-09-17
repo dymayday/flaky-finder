@@ -1,6 +1,9 @@
 use builder::FlakyFinderBuilder;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-use std::process::{Command, ExitStatus};
+use std::{
+    io::Write,
+    process::{Command, ExitStatus},
+};
 
 mod builder;
 mod cli;
@@ -44,7 +47,8 @@ impl FlakyFinder {
             // let status = output.status().expect("Falt to get process status.");
             let status = output.status;
             if !status.success() {
-                println!("Status = {:#?}", output);
+                // std::io::stdout().write_all(&output.stdout).unwrap();
+                std::io::stderr().write_all(&output.stderr).unwrap();
                 break;
             }
         }
@@ -66,6 +70,8 @@ mod tests {
     fn new_test() {
         let _cmd = "cargo test -- --nocapture release_test";
         let cmd = "ls";
-        let ff = FlakyFinderBuilder::new().cmd(cmd).nb_threads(1).build();
+        let _ff = FlakyFinderBuilder::new().cmd(cmd).nb_threads(1).build();
+
+        // assert_eq!(true, false);
     }
 }
