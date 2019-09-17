@@ -12,7 +12,7 @@ impl Cli {
     pub fn new() -> Self {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.1")
+            .version("0.2.5")
             .author("dymayday <dymayday@gmail.com>")
             .about("The app is looking for bug in the matrix.")
             .arg(
