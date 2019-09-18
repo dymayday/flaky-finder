@@ -1,6 +1,6 @@
 //! FlakyFinder builder pattern definition.
 
-use crate::{cli::Cli, FlakyFinder, error::FlakyFinderResult};
+use crate::{cli::Cli, error::FlakyFinderResult, FlakyFinder};
 use std::process::ExitStatus;
 
 pub(crate) struct FlakyFinderBuilder {

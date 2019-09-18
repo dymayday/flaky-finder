@@ -1,7 +1,7 @@
 //! CLI handler definition.
 
-use clap::{App, Arg};
 use crate::error::FlakyFinderResult;
+use clap::{App, Arg};
 
 pub(crate) struct Cli {
     pub(crate) cmd: String,

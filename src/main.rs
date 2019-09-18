@@ -1,4 +1,5 @@
 #![feature(try_trait)]
+use crate::utils::{fstderr, fstdout};
 use builder::FlakyFinderBuilder;
 use crossbeam_channel;
 use error::FlakyFinderResult;
@@ -8,7 +9,6 @@ use std::{
     process::{Command, ExitStatus, Output},
 };
 use threadpool;
-use crate::utils::{fstdout, fstderr};
 
 mod builder;
 mod cli;
@@ -55,9 +55,7 @@ impl FlakyFinder {
             .arg("-c")
             .arg(cmd.to_string())
             .output()
-            .expect("Fail to run command process.");
-        // sx.send(output)
-        //     .expect("Fail to send Command's output to channel.");
+            .expect("Fail to warming up.");
         println!("done.");
 
         let pool = threadpool::ThreadPool::new(nb_threads as usize);
@@ -75,13 +73,12 @@ impl FlakyFinder {
 
                 sx.send(output)
                     .expect("Fail to send Command's output to channel.");
-                });
+            });
         }
 
         drop(sx);
 
         let mut error_counter = 0;
-        // for recv_output in rx.iter() {
         for recv_output in rx.iter().progress_with(pb.clone()) {
             let status = recv_output.status;
             if !status.success() {
@@ -90,11 +87,13 @@ impl FlakyFinder {
                 if !self.should_continue {
                     break;
                 } else {
-                    pb.set_message(&format!("# Errors found = {:>3}", error_counter));
-                    ::std::thread::sleep(::std::time::Duration::from_millis(1000));
+                    pb.set_message(&format!(
+                        "-- {:.*}% Errors found.",
+                        1,
+                        self.percent_of_error_found(error_counter)
+                    ));
                 }
             }
-            // pb.inc(1);
         }
         drop(rx);
 
@@ -108,11 +107,12 @@ impl FlakyFinder {
 
     /// Print out all the errors we found.
     fn show_errors(&self) -> FlakyFinderResult<()> {
-
         if self.outputs.is_empty() {
             eprintln!(">> Nothing found 👍");
         } else {
-            eprintln!(">> Error found summary:");
+            eprintln!("\n>> {:.*}% Errors found:",
+                        1,
+                        self.percent_of_error_found(self.outputs.len() as u64));
         }
         for error_output in self.outputs.iter() {
             fstdout(&error_output.stdout)?;
@@ -122,6 +122,10 @@ impl FlakyFinder {
             }
         }
         Ok(())
+    }
+
+    fn percent_of_error_found(&self, nb_errors: u64) -> f32 {
+        (nb_errors as f32 / self.runs as f32) * 100.0
     }
 }
 
