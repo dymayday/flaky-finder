@@ -28,9 +28,9 @@ To run 100 times a test over 2 threads in parallel with cargo to discover a pote
 flaky-finder -j2 -r100 "cargo test -- --nocapture release_test"
 ```
 
-But keep in mind that this can give false results if your tests cannot be run in parallel, if they use the same network sack from the OS for example.
+But keep in mind that this can give false results if your tests cannot be run in parallel, if they use the same network stack from the OS for example.
 
 ## ToDo
 
 - [X] Add ability to run process in multiple threads.
-- [ ] Add better documentation.
+- [ ] Improve documentation.
