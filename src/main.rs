@@ -88,7 +88,7 @@ impl FlakyFinder {
                     break;
                 } else {
                     pb.set_message(&format!(
-                        "-- {:.*}% Errors found.",
+                        "-- {:.*}% Errors found...",
                         1,
                         self.percent_of_error_found(error_counter)
                     ));

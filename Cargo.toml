@@ -1,6 +1,6 @@
 [package]
 name = "flaky-finder"
-version = "0.2.15"
+version = "0.2.16"
 authors = ["dymayday <dymayday@gmail.com>"]
 description = "CLI tool meant to find flaky test by running multiple times a test harness until it fails."
 documentation = "https://github.com/dymayday/flaky-finder"
