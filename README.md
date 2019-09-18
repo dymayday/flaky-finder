@@ -22,10 +22,10 @@ cargo build --release
 
 ## Example
 
-To run 100 times a test over 2 threads in parallel with cargo to discover a potential flakyness, we can run this:
+To run 100 times a test over 2 threads in parallel with cargo to discover a potential flakyness without stop at the first error encountered, one can run this:
 
 ```bash
-flaky-finder -j2 -r100 "cargo test -- --nocapture release_test"
+flaky-finder -j2 -r100 --continue "cargo test -- --nocapture release_test"
 ```
 
 But keep in mind that this can give false results if your tests cannot be run in parallel, if they use the same network stack from the OS for example.

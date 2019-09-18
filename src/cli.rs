@@ -14,7 +14,7 @@ impl Cli {
     pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.13")
+            .version("0.2.14")
             .author("dymayday <dymayday@gmail.com>")
             .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
@@ -38,7 +38,7 @@ impl Cli {
                 Arg::with_name("continue")
                     .short("c")
                     .long("continue")
-                    .help("The number of threads we want to run test harness."),
+                    .help("Whether or not we want to stop at the fist error found."),
             )
             .get_matches();
 
