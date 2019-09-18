@@ -33,7 +33,7 @@ But keep in mind that this can give false results if your tests cannot be run in
 ## ToDo
 
 - [X] Add ability to run process in multiple threads.
-- [ ] Add possibility to not stop at first failed test found.
-- [ ] Add percentage of failure.
+- [X] Add possibility to not stop at first failed test found.
+- [X] Add percentage of failure.
 - [ ] Improve documentation.
 - [ ] Add real tests.
