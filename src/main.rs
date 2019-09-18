@@ -4,7 +4,7 @@ use crossbeam_channel;
 use error::FlakyFinderResult;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use std::{
-    io::Write,
+    io::{stderr, stdout, Write},
     process::{Command, ExitStatus},
 };
 use threadpool;
@@ -30,8 +30,6 @@ pub(crate) struct FlakyFinder {
 impl FlakyFinder {
     /// Runs a command multiple time trying to find if it can fail at some point.
     pub(crate) fn run(&self) -> FlakyFinderResult<()> {
-        // println!("param = {:#?}", self);
-
         // Provide a custom bar style
         let pb = ProgressBar::new(self.runs);
         pb.set_style(ProgressStyle::default_bar().template(
@@ -40,7 +38,7 @@ impl FlakyFinder {
 
         // Execute the process at least one time in order to single process the compilation
         print!(">> Compiling...");
-        ::std::io::stdout().flush()?;
+        stdout().flush()?;
         let output = Command::new("sh")
             .arg("-c")
             .arg(self.cmd.clone())
@@ -49,8 +47,10 @@ impl FlakyFinder {
         println!("done.");
         let status = output.status;
         if !status.success() {
-            std::io::stdout().write_all(&output.stdout)?;
-            std::io::stderr().write_all(&output.stderr)?;
+            stdout().write_all(&output.stdout)?;
+            stdout().flush()?;
+            stderr().write_all(&output.stderr)?;
+            stdout().flush()?;
             return Ok(());
         }
 
@@ -63,8 +63,10 @@ impl FlakyFinder {
 
             let status = output.status;
             if !status.success() {
-                std::io::stdout().write_all(&output.stdout)?;
-                std::io::stderr().write_all(&output.stderr)?;
+                stdout().write_all(&output.stdout)?;
+                stdout().flush()?;
+                stderr().write_all(&output.stderr)?;
+                stdout().flush()?;
                 break;
             }
         }
@@ -85,7 +87,7 @@ impl FlakyFinder {
 
         // Execute the process at least one time in order to single process the compilation
         print!(">> Compiling...");
-        ::std::io::stdout().flush()?;
+        stdout().flush()?;
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd.to_string())
@@ -118,8 +120,11 @@ impl FlakyFinder {
         for recv_output in rx.iter().progress_with(pb) {
             let status = recv_output.status;
             if !status.success() {
-                std::io::stdout().write_all(&recv_output.stdout)?;
-                std::io::stderr().write_all(&recv_output.stderr)?;
+                stdout().write_all(&recv_output.stdout)?;
+                stdout().flush()?;
+                stderr().write_all(&recv_output.stderr)?;
+                stdout().flush()?;
+
                 break;
             }
         }
