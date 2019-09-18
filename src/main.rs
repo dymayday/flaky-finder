@@ -4,14 +4,16 @@ use crossbeam_channel;
 use error::FlakyFinderResult;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use std::{
-    io::{stderr, stdout, Write},
+    io::{stdout, Write},
     process::{Command, ExitStatus},
 };
 use threadpool;
+use crate::utils::{fstdout, fstderr};
 
 mod builder;
 mod cli;
 mod error;
+mod utils;
 
 #[derive(Debug)]
 pub(crate) struct FlakyFinder {
@@ -47,10 +49,8 @@ impl FlakyFinder {
         println!("done.");
         let status = output.status;
         if !status.success() {
-            stdout().write_all(&output.stdout)?;
-            stdout().flush()?;
-            stderr().write_all(&output.stderr)?;
-            stdout().flush()?;
+            fstdout(&output.stdout)?;
+            fstderr(&output.stderr)?;
             return Ok(());
         }
 
@@ -63,10 +63,8 @@ impl FlakyFinder {
 
             let status = output.status;
             if !status.success() {
-                stdout().write_all(&output.stdout)?;
-                stdout().flush()?;
-                stderr().write_all(&output.stderr)?;
-                stdout().flush()?;
+                fstdout(&output.stdout)?;
+                fstderr(&output.stderr)?;
                 break;
             }
         }
@@ -120,11 +118,8 @@ impl FlakyFinder {
         for recv_output in rx.iter().progress_with(pb) {
             let status = recv_output.status;
             if !status.success() {
-                stdout().write_all(&recv_output.stdout)?;
-                stdout().flush()?;
-                stderr().write_all(&recv_output.stderr)?;
-                stdout().flush()?;
-
+                fstdout(&recv_output.stdout)?;
+                fstderr(&recv_output.stderr)?;
                 break;
             }
         }
