@@ -14,7 +14,7 @@ impl Cli {
     pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.14")
+            .version("0.2.15")
             .author("dymayday <dymayday@gmail.com>")
             .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
