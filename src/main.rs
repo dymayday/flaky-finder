@@ -38,6 +38,22 @@ impl FlakyFinder {
             "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
         ));
 
+        // Execute the process at least one time in order to single process the compilation
+        print!(">> Compiling...");
+        ::std::io::stdout().flush()?;
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg(self.cmd.clone())
+            .output()
+            .expect("Fail to run command process.");
+        println!("done.");
+        let status = output.status;
+        if !status.success() {
+            std::io::stdout().write_all(&output.stdout)?;
+            std::io::stderr().write_all(&output.stderr)?;
+            return Ok(());
+        }
+
         for _ in (0..self.runs).progress_with(pb) {
             let output = Command::new("sh")
                 .arg("-c")
