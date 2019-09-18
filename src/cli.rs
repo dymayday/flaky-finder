@@ -14,7 +14,7 @@ impl Cli {
     pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.16")
+            .version("0.2.17")
             .author("dymayday <dymayday@gmail.com>")
             .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
@@ -48,11 +48,13 @@ impl Cli {
                 .expect("No command specified.")
                 .to_owned(),
             nb_threads: matches
-                .value_of("nb_threads")?
+                .value_of("nb_threads")
+                .unwrap_or("1")
                 .parse::<u32>()
                 .expect("Fail to cast 'number of threads' argument."),
             runs: matches
-                .value_of("runs")?
+                .value_of("runs")
+                .unwrap_or("1")
                 .parse::<u64>()
                 .expect("Fail to cast 'number of runs' argument."),
             should_continue: matches.is_present("continue"),

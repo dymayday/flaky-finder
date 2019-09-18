@@ -1,4 +1,4 @@
-#![feature(try_trait)]
+// #![feature(try_trait)]
 use crate::utils::{fstderr, fstdout};
 use builder::FlakyFinderBuilder;
 use crossbeam_channel;

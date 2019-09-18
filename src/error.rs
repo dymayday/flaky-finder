@@ -38,8 +38,8 @@ impl FlakyFinderError {
 pub enum ErrorKind {
     /// An I/O error that occurred while processing a data stream.
     Io(io::Error),
-    /// Error occuring from None Option
-    NoneError(std::option::NoneError),
+    // /// Error occuring from None Option
+    // NoneError(std::option::NoneError),
     /// Error occuring while converting bytes to String.
     Utf8Error(std::str::Utf8Error),
     /// Yet undefined error.
@@ -58,7 +58,7 @@ impl StdError for FlakyFinderError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match *self.0 {
             ErrorKind::Io(ref err) => Some(err),
-            ErrorKind::NoneError(ref _err) => None,
+            // ErrorKind::NoneError(ref _err) => None,
             ErrorKind::Utf8Error(ref err) => Some(err),
             ErrorKind::Other(ref _s) => None,
             _ => unreachable!(),
@@ -70,7 +70,7 @@ impl fmt::Display for FlakyFinderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
             ErrorKind::Io(ref err) => err.fmt(f),
-            ErrorKind::NoneError(ref _err) => write!(f, "None value encountered."),
+            // ErrorKind::NoneError(ref _err) => write!(f, "None value encountered."),
             ErrorKind::Utf8Error(ref err) => err.fmt(f),
             ErrorKind::Other(ref s) => write!(f, "Unknown error encountered: '{}'.", s),
             _ => unreachable!(),
@@ -84,11 +84,11 @@ impl From<io::Error> for FlakyFinderError {
     }
 }
 
-impl From<std::option::NoneError> for FlakyFinderError {
-    fn from(err: std::option::NoneError) -> Self {
-        FlakyFinderError::new(ErrorKind::NoneError(err))
-    }
-}
+// impl From<std::option::NoneError> for FlakyFinderError {
+//     fn from(err: std::option::NoneError) -> Self {
+//         FlakyFinderError::new(ErrorKind::NoneError(err))
+//     }
+// }
 
 impl From<std::str::Utf8Error> for FlakyFinderError {
     fn from(err: std::str::Utf8Error) -> Self {
