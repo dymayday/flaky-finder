@@ -1,20 +1,22 @@
 //! CLI handler definition.
 
 use clap::{App, Arg};
+use crate::error::FlakyFinderResult;
 
 pub(crate) struct Cli {
     pub(crate) cmd: String,
     pub(crate) nb_threads: u32,
     pub(crate) runs: u64,
+    pub(crate) should_continue: bool,
 }
 
 impl Cli {
-    pub fn new() -> Self {
+    pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.11")
+            .version("0.2.12")
             .author("dymayday <dymayday@gmail.com>")
-            .about("This app is looking for bug in the matrix.")
+            .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
                 Arg::with_name(r#""cmd""#)
                     .required(true)
@@ -32,23 +34,28 @@ impl Cli {
                     .default_value("1")
                     .help("The number of threads we want to run test harness."),
             )
+            .arg(
+                Arg::with_name("continue")
+                    .short("c")
+                    .long("continue")
+                    .help("The number of threads we want to run test harness."),
+            )
             .get_matches();
 
-        Self {
+        Ok(Self {
             cmd: matches
                 .value_of(r#""cmd""#)
                 .expect("No command specified.")
                 .to_owned(),
             nb_threads: matches
-                .value_of("nb_threads")
-                .unwrap_or("1")
+                .value_of("nb_threads")?
                 .parse::<u32>()
-                .expect("Fail to cast number of threads argument."),
+                .expect("Fail to cast 'number of threads' argument."),
             runs: matches
-                .value_of("runs")
-                .unwrap_or("1")
+                .value_of("runs")?
                 .parse::<u64>()
-                .expect("Fail to cast number of runs argument."),
-        }
+                .expect("Fail to cast 'number of runs' argument."),
+            should_continue: matches.is_present("continue"),
+        })
     }
 }

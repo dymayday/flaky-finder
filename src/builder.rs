@@ -1,6 +1,6 @@
 //! FlakyFinder builder pattern definition.
 
-use crate::{cli::Cli, FlakyFinder};
+use crate::{cli::Cli, FlakyFinder, error::FlakyFinderResult};
 use std::process::ExitStatus;
 
 pub(crate) struct FlakyFinderBuilder {
@@ -8,12 +8,12 @@ pub(crate) struct FlakyFinderBuilder {
     cmd: String,
     /// The status of the process we are currently evaluating
     exit_status: Option<ExitStatus>,
-    /// The output from the process we are evaluating: stdout/stderr
-    output: Option<String>,
     /// Let's run those tests in parallel
     nb_threads: u32,
-    /// How many times we should run the command.
+    /// How many times we should run the command
     runs: u64,
+    /// Shall we stop on the first flaky test found or continue
+    should_continue: bool,
 }
 
 impl std::default::Default for FlakyFinderBuilder {
@@ -21,9 +21,9 @@ impl std::default::Default for FlakyFinderBuilder {
         Self {
             cmd: String::default(),
             exit_status: None,
-            output: None,
             nb_threads: 1,
             runs: 10,
+            should_continue: false,
         }
     }
 }
@@ -34,14 +34,15 @@ impl FlakyFinderBuilder {
         Self::default()
     }
 
-    pub(crate) fn from_cli() -> Self {
-        let cli = Cli::new();
-        Self {
+    pub(crate) fn from_cli() -> FlakyFinderResult<Self> {
+        let cli = Cli::new()?;
+        Ok(Self {
             cmd: cli.cmd.clone(),
             nb_threads: cli.nb_threads,
             runs: cli.runs,
+            should_continue: cli.should_continue,
             ..Default::default()
-        }
+        })
     }
 
     /// The actual command of the process we are evaluating.
@@ -63,9 +64,10 @@ impl FlakyFinderBuilder {
         FlakyFinder {
             cmd: self.cmd.clone(),
             exit_status: self.exit_status,
-            output: self.output.clone(),
+            outputs: Vec::new(),
             nb_threads: self.nb_threads,
             runs: self.runs,
+            should_continue: self.should_continue,
         }
     }
 }

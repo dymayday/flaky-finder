@@ -5,7 +5,7 @@ use error::FlakyFinderResult;
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use std::{
     io::{stdout, Write},
-    process::{Command, ExitStatus},
+    process::{Command, ExitStatus, Output},
 };
 use threadpool;
 use crate::utils::{fstdout, fstderr};
@@ -22,61 +22,26 @@ pub(crate) struct FlakyFinder {
     /// The status of the process we are currently evaluating
     exit_status: Option<ExitStatus>,
     /// The output from the process we are evaluating: stdout/stderr
-    output: Option<String>,
+    outputs: Vec<Output>,
     /// Let's run those tests in parallel
     nb_threads: u32,
     /// How many times we should run the command.
     runs: u64,
+    /// Shall we stop on the first flaky test found or continue
+    should_continue: bool,
 }
 
 impl FlakyFinder {
     /// Runs a command multiple time trying to find if it can fail at some point.
-    pub(crate) fn run(&self) -> FlakyFinderResult<()> {
-        // Provide a custom bar style
-        let pb = ProgressBar::new(self.runs);
-        pb.set_style(ProgressStyle::default_bar().template(
-            "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
-        ));
+    pub(crate) fn run(&mut self) -> FlakyFinderResult<()> {
+        let runs = self.runs;
+        let nb_threads = self.nb_threads;
+        let cmd = &self.cmd;
 
-        // Execute the process at least one time in order to single process the compilation
-        print!(">> Compiling...");
-        stdout().flush()?;
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(self.cmd.clone())
-            .output()
-            .expect("Fail to run command process.");
-        println!("done.");
-        let status = output.status;
-        if !status.success() {
-            fstdout(&output.stdout)?;
-            fstderr(&output.stderr)?;
-            return Ok(());
-        }
-
-        for _ in (0..self.runs).progress_with(pb) {
-            let output = Command::new("sh")
-                .arg("-c")
-                .arg(self.cmd.clone())
-                .output()
-                .expect("Fail to run command process.");
-
-            let status = output.status;
-            if !status.success() {
-                fstdout(&output.stdout)?;
-                fstderr(&output.stderr)?;
-                break;
-            }
-        }
-        Ok(())
-    }
-
-    /// Runs a command multiple time trying to find if it can fail at some point.
-    pub(crate) fn par_run(cmd: &str, nb_threads: u32, runs: u64) -> FlakyFinderResult<()> {
         // Provide a custom bar style
         let pb = ProgressBar::new(runs);
         pb.set_style(ProgressStyle::default_bar().template(
-            "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta})",
+                "{spinner:.cyan} [{elapsed_precise}] [{bar:40.white/gray}] ({pos}/{len}, ETA {eta}) {msg}",
         ));
 
         let (sx, rx) = crossbeam_channel::bounded(runs as usize);
@@ -84,20 +49,20 @@ impl FlakyFinder {
         let cmd = std::sync::Arc::new(cmd.to_string());
 
         // Execute the process at least one time in order to single process the compilation
-        print!(">> Compiling...");
+        print!(">> Warming up...");
         stdout().flush()?;
-        let output = Command::new("sh")
+        let _ = Command::new("sh")
             .arg("-c")
             .arg(cmd.to_string())
             .output()
             .expect("Fail to run command process.");
-        sx.send(output)
-            .expect("Fail to send Command's output to channel.");
+        // sx.send(output)
+        //     .expect("Fail to send Command's output to channel.");
         println!("done.");
 
         let pool = threadpool::ThreadPool::new(nb_threads as usize);
 
-        for _ in 0..runs - 1 {
+        for _ in 0..runs {
             let cmd = cmd.clone();
             let sx = sx.clone();
 
@@ -110,38 +75,65 @@ impl FlakyFinder {
 
                 sx.send(output)
                     .expect("Fail to send Command's output to channel.");
-            });
+                });
         }
 
         drop(sx);
 
-        for recv_output in rx.iter().progress_with(pb) {
+        let mut error_counter = 0;
+        // for recv_output in rx.iter() {
+        for recv_output in rx.iter().progress_with(pb.clone()) {
             let status = recv_output.status;
             if !status.success() {
-                fstdout(&recv_output.stdout)?;
-                fstderr(&recv_output.stderr)?;
-                break;
+                error_counter += 1;
+                self.outputs.push(recv_output);
+                if !self.should_continue {
+                    break;
+                } else {
+                    pb.set_message(&format!("# Errors found = {:>3}", error_counter));
+                    ::std::thread::sleep(::std::time::Duration::from_millis(1000));
+                }
             }
+            // pb.inc(1);
         }
         drop(rx);
 
+        if error_counter > 1 {
+            pb.finish();
+        }
+        self.show_errors()?;
+
+        Ok(())
+    }
+
+    /// Print out all the errors we found.
+    fn show_errors(&self) -> FlakyFinderResult<()> {
+
+        if self.outputs.is_empty() {
+            eprintln!(">> Nothing found 👍");
+        } else {
+            eprintln!(">> Error found summary:");
+        }
+        for error_output in self.outputs.iter() {
+            fstdout(&error_output.stdout)?;
+            fstderr(&error_output.stderr)?;
+            if self.outputs.len() > 1 {
+                eprintln!("\n{:^80}\n", "##########################################");
+            }
+        }
         Ok(())
     }
 }
 
-fn main() {
-    let ff = FlakyFinderBuilder::from_cli().build();
-
+fn main() -> FlakyFinderResult<()> {
+    let mut ff = FlakyFinderBuilder::from_cli()?.build();
     if ff.runs < 1 {
         panic!("Number of 'runs' has to be > 0.")
-    }
-
-    if ff.nb_threads > 1 {
-        FlakyFinder::par_run(&ff.cmd, ff.nb_threads, ff.runs)
-            .expect("Fail to run processes in parallel.");
     } else {
         ff.run().expect("Fail to processes.");
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -155,5 +147,11 @@ mod tests {
         let _ff = FlakyFinderBuilder::new().cmd(cmd).nb_threads(1).build();
 
         // assert_eq!(true, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn failing_test() {
+        assert!(false);
     }
 }
