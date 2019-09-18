@@ -12,11 +12,11 @@ impl Cli {
     pub fn new() -> Self {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.9")
+            .version("0.2.10")
             .author("dymayday <dymayday@gmail.com>")
-            .about("The app is looking for bug in the matrix.")
+            .about("This app is looking for bug in the matrix.")
             .arg(
-                Arg::with_name("cmd")
+                Arg::with_name(r#""cmd""#)
                     .required(true)
                     .help("The command of the process we want to evaluate."),
             )
@@ -36,7 +36,7 @@ impl Cli {
 
         Self {
             cmd: matches
-                .value_of("cmd")
+                .value_of(r#""cmd""#)
                 .expect("No command specified.")
                 .to_owned(),
             nb_threads: matches
