@@ -15,7 +15,7 @@ impl Cli {
     pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.18")
+            .version("0.2.19")
             .author("dymayday <dymayday@gmail.com>")
             .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
@@ -42,10 +42,10 @@ impl Cli {
                     .help("Whether or not we want to stop at the fist error found."),
             )
             .arg(
-                Arg::with_name("show")
-                    .short("s")
-                    .long("show-error-on-the-fly")
-                    .help("Show error as they arrive of show them as a summary at the end."),
+                Arg::with_name("print")
+                    .short("p")
+                    .long("print-error-on-the-fly")
+                    .help("Show errors as they arrive of show them as a summary at the end."),
             )
             .get_matches();
 
@@ -65,7 +65,7 @@ impl Cli {
                 .parse::<u64>()
                 .expect("Fail to cast 'number of runs' argument."),
             should_continue: matches.is_present("continue"),
-            show_errors_as_summary: !matches.is_present("show"),
+            show_errors_as_summary: !matches.is_present("print"),
         })
     }
 }
