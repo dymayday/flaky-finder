@@ -91,7 +91,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "flaky-finder"
-version = "0.2.20"
+version = "0.2.21"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam-channel 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    // #[should_panic]
+    #[should_panic]
     fn failing_test() {
         assert!(false);
     }
