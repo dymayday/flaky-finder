@@ -8,13 +8,14 @@ pub(crate) struct Cli {
     pub(crate) nb_threads: u32,
     pub(crate) runs: u64,
     pub(crate) should_continue: bool,
+    pub(crate) show_errors_as_summary: bool,
 }
 
 impl Cli {
     pub fn new() -> FlakyFinderResult<Self> {
         // TODO: Use env instead here
         let matches = App::new("Flaky-Finder")
-            .version("0.2.17")
+            .version("0.2.18")
             .author("dymayday <dymayday@gmail.com>")
             .about("This app is looking for flakyness in tests in the matrix.")
             .arg(
@@ -40,6 +41,12 @@ impl Cli {
                     .long("continue")
                     .help("Whether or not we want to stop at the fist error found."),
             )
+            .arg(
+                Arg::with_name("show")
+                    .short("s")
+                    .long("show-error-on-the-fly")
+                    .help("Show error as they arrive of show them as a summary at the end."),
+            )
             .get_matches();
 
         Ok(Self {
@@ -58,6 +65,7 @@ impl Cli {
                 .parse::<u64>()
                 .expect("Fail to cast 'number of runs' argument."),
             should_continue: matches.is_present("continue"),
+            show_errors_as_summary: !matches.is_present("show"),
         })
     }
 }

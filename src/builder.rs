@@ -14,6 +14,8 @@ pub(crate) struct FlakyFinderBuilder {
     runs: u64,
     /// Shall we stop on the first flaky test found or continue
     should_continue: bool,
+    /// Should we show the errors as they come or only in the end as a summary
+    show_errors_as_summary: bool,
 }
 
 impl std::default::Default for FlakyFinderBuilder {
@@ -24,6 +26,7 @@ impl std::default::Default for FlakyFinderBuilder {
             nb_threads: 1,
             runs: 10,
             should_continue: false,
+            show_errors_as_summary: true,
         }
     }
 }
@@ -41,6 +44,7 @@ impl FlakyFinderBuilder {
             nb_threads: cli.nb_threads,
             runs: cli.runs,
             should_continue: cli.should_continue,
+            show_errors_as_summary: cli.show_errors_as_summary,
             ..Default::default()
         })
     }
@@ -68,6 +72,7 @@ impl FlakyFinderBuilder {
             nb_threads: self.nb_threads,
             runs: self.runs,
             should_continue: self.should_continue,
+            show_errors_as_summary: self.show_errors_as_summary,
         }
     }
 }

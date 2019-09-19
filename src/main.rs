@@ -29,6 +29,8 @@ pub(crate) struct FlakyFinder {
     runs: u64,
     /// Shall we stop on the first flaky test found or continue
     should_continue: bool,
+    /// Should we show the errors as they come or only in the end as a summary
+    show_errors_as_summary: bool,
 }
 
 impl FlakyFinder {
@@ -83,7 +85,7 @@ impl FlakyFinder {
             let status = recv_output.status;
             if !status.success() {
                 error_counter += 1;
-                self.outputs.push(recv_output);
+
                 if !self.should_continue {
                     break;
                 } else {
@@ -92,15 +94,31 @@ impl FlakyFinder {
                         1,
                         self.percent_of_error_found(error_counter)
                     ));
+                    pb.inc(0);
+
+                    if !self.show_errors_as_summary {
+                        pb.println(::std::str::from_utf8(&recv_output.stdout)?);
+                        pb.println(::std::str::from_utf8(&recv_output.stderr)?);
+                        pb.println(format!(
+                            "\n{:^80}\n\n",
+                            "##########################################"
+                        ));
+                    }
                 }
+                self.outputs.push(recv_output.clone());
             }
+            // ::std::thread::sleep(::std::time::Duration::from_millis(1000));
         }
+
         drop(rx);
 
         if error_counter > 1 {
             pb.finish();
         }
-        self.show_errors()?;
+
+        if self.show_errors_as_summary {
+            self.show_errors()?;
+        }
 
         Ok(())
     }
@@ -110,9 +128,11 @@ impl FlakyFinder {
         if self.outputs.is_empty() {
             eprintln!(">> Nothing found 👍");
         } else {
-            eprintln!("\n>> {:.*}% Errors found:",
-                        1,
-                        self.percent_of_error_found(self.outputs.len() as u64));
+            eprintln!(
+                "\n>> {:.*}% Errors found:",
+                1,
+                self.percent_of_error_found(self.outputs.len() as u64)
+            );
         }
         for error_output in self.outputs.iter() {
             fstdout(&error_output.stdout)?;
@@ -154,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    // #[should_panic]
     fn failing_test() {
         assert!(false);
     }
